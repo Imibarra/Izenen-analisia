@@ -1,0 +1,626 @@
+<!doctype html>
+<html lang="eu">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#15803d">
+  <title>Izenak aztertu | Beta-Urreko</title>
+  <style>
+    :root {
+      --subject: #15803d;
+      --subject-dark: #0f5f2d;
+      --subject-soft: #dcfce7;
+      --bg: #f1f5f3;
+      --surface: #fff;
+      --surface-2: #f7faf8;
+      --text: #17211a;
+      --muted: #5f6f64;
+      --border: #cfdad2;
+      --correct: #2e7d32;
+      --correct-soft: #e8f5e9;
+      --error: #c62828;
+      --error-soft: #ffebee;
+      --info: #1e88e5;
+      --shadow: 0 18px 45px rgba(20,65,35,.1);
+    }
+
+    * { box-sizing: border-box; }
+    html { min-height: 100%; }
+    body {
+      min-height: 100vh;
+      margin: 0;
+      color: var(--text);
+      background: radial-gradient(circle at 10% 0%, rgba(21,128,61,.08), transparent 30rem), var(--bg);
+      font-family: Inter, ui-rounded, "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      line-height: 1.5;
+    }
+    button { font: inherit; touch-action: manipulation; }
+
+    .app { width: min(100% - 28px, 1040px); margin: 0 auto; padding: 24px 0 40px; }
+    .brand { display: inline-flex; align-items: center; gap: 10px; margin: 0 0 16px 4px; color: var(--subject-dark); font-weight: 850; }
+    .brand-mark { display: grid; width: 42px; height: 42px; place-items: center; border-radius: 13px; color: #fff; background: var(--subject); box-shadow: 0 6px 16px rgba(21,128,61,.22); font-size: .95rem; }
+    .shell { overflow: hidden; border: 1px solid rgba(21,128,61,.15); border-radius: 28px; background: var(--surface); box-shadow: var(--shadow); }
+    .hero { padding: clamp(26px,5vw,48px); color: #fff; background: linear-gradient(135deg,var(--subject-dark),var(--subject)); }
+    .hero-row { display: flex; align-items: center; justify-content: center; gap: 16px; flex-wrap: wrap; text-align: center; }
+    h1,h2,h3,p { margin-top: 0; }
+    h1 { margin-bottom: 0; font-size: clamp(2rem,6vw,3.65rem); line-height: 1.02; letter-spacing: -.045em; }
+    .subtitle { max-width: 700px; margin: 18px auto 0; color: rgba(255,255,255,.92); text-align: center; font-size: clamp(1rem,2.4vw,1.18rem); }
+    .content { padding: clamp(24px,5vw,46px); }
+
+    .help-button { min-height: 46px; padding: 10px 16px; border: 2px solid rgba(255,255,255,.72); border-radius: 999px; color: #fff; background: rgba(255,255,255,.12); font-weight: 850; cursor: pointer; }
+    .help-button:hover { background: rgba(255,255,255,.22); }
+    .section-label { display: inline-block; margin-bottom: 16px; padding: 7px 12px; border-radius: 9px; color: #fff; background: var(--subject); font-size: .83rem; font-weight: 900; letter-spacing: .06em; text-transform: uppercase; }
+
+    .round-options { display: grid; grid-template-columns: repeat(5,1fr); gap: 12px; margin-bottom: 28px; }
+    .round-option { min-height: 104px; padding: 16px 10px; border: 2px solid var(--border); border-radius: 17px; color: var(--text); background: var(--surface-2); cursor: pointer; transition: transform .15s,border-color .15s,background .15s; }
+    .round-option:hover { transform: translateY(-2px); border-color: var(--subject); }
+    .round-option[aria-pressed="true"] { border-color: var(--subject); background: var(--subject-soft); box-shadow: inset 0 0 0 1px var(--subject); }
+    .round-number { display: block; color: var(--subject-dark); font-size: 1.72rem; font-weight: 950; }
+    .round-text { display: block; color: var(--muted); font-size: .9rem; font-weight: 750; }
+    .board-launch { border-color: var(--subject); color: #fff; background: var(--subject); }
+    .board-launch .round-number,.board-launch .round-text { color: #fff; }
+
+    .button-row { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; }
+    .button { min-height: 50px; padding: 12px 24px; border: 0; border-radius: 14px; font-weight: 850; cursor: pointer; transition: transform .15s,filter .15s; }
+    .button:hover { transform: translateY(-1px); filter: brightness(1.03); }
+    .button-primary { color: #fff; background: var(--subject); box-shadow: 0 8px 20px rgba(21,128,61,.2); }
+    .button-secondary { color: var(--subject-dark); background: var(--subject-soft); }
+    .button-neutral { color: #334155; background: #e2e8f0; }
+    .button:disabled { cursor: not-allowed; opacity: .5; transform: none; }
+    .button:focus-visible,.round-option:focus-visible,.word:focus-visible,.choice:focus-visible,.help-button:focus-visible { outline: 4px solid rgba(30,136,229,.28); outline-offset: 3px; }
+    .screen[hidden] { display: none !important; }
+
+    .game-top { display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: 14px; margin-bottom: 22px; }
+    .progress-wrap { min-width: 0; }
+    .progress-labels { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 7px; color: var(--muted); font-size: .88rem; font-weight: 800; }
+    .progress-track { height: 11px; overflow: hidden; border-radius: 999px; background: #dfe9e1; }
+    .progress-bar { width: 0; height: 100%; border-radius: inherit; background: var(--subject); transition: width .35s; }
+    .stat { min-width: 96px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 13px; background: var(--surface-2); text-align: center; }
+    .stat-value { display: block; color: var(--subject-dark); font-size: 1.08rem; font-weight: 900; }
+    .stat-label { display: block; color: var(--muted); font-size: .72rem; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; }
+
+    .question-card { padding: clamp(22px,4vw,38px); border: 2px solid #dbe6dd; border-radius: 22px; background: var(--surface-2); }
+    .phase-title { margin-bottom: 8px; color: var(--subject); text-align: center; font-size: .84rem; font-weight: 950; letter-spacing: .08em; text-transform: uppercase; }
+    .instruction { margin-bottom: 22px; color: var(--muted); text-align: center; font-weight: 750; }
+    .sentence { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; padding: 22px; border-radius: 16px; background: #fff; font-size: clamp(1.25rem,3vw,1.82rem); font-weight: 800; line-height: 1.45; }
+    .word { padding: 4px 7px; border: 2px solid transparent; border-radius: 9px; color: var(--text); background: transparent; font-weight: inherit; cursor: pointer; }
+    .word:hover:not(:disabled) { border-color: #9ac7a8; background: var(--subject-soft); }
+    .word.selected { border-color: var(--subject); color: var(--subject-dark); background: var(--subject-soft); }
+    .word.correct { border-color: var(--correct); color: #1b5e20; background: var(--correct-soft); }
+    .word.wrong { border-color: var(--error); color: #8e1b1b; background: var(--error-soft); }
+    .word:disabled { cursor: default; opacity: 1; }
+
+    .feedback { min-height: 0; margin: 0; padding: 0; border-radius: 13px; font-weight: 800; }
+    .feedback:not(:empty) { min-height: 56px; margin: 18px 0 0; padding: 13px 16px; }
+    .feedback.correct { color: #1b5e20; background: var(--correct-soft); border: 1px solid #a5d6a7; }
+    .feedback.wrong { color: #8e1b1b; background: var(--error-soft); border: 1px solid #ef9a9a; }
+
+    .analysis { margin-top: 24px; padding-top: 24px; border-top: 2px dashed var(--border); }
+    .noun-head { display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; margin-bottom: 22px; text-align: center; }
+    .noun-counter { padding: 6px 10px; border-radius: 999px; color: var(--subject-dark); background: var(--subject-soft); font-size: .78rem; font-weight: 900; }
+    .noun-name { margin: 0; font-size: clamp(1.65rem,4vw,2.35rem); }
+    .noun-surface { display: block; color: var(--muted); font-size: .88rem; font-weight: 700; }
+    .choice-groups { display: grid; gap: 16px; }
+    .choice-group { padding: 15px; border: 1px solid var(--border); border-radius: 14px; background: #fff; }
+    .choice-label { display: block; margin-bottom: 10px; color: var(--muted); font-size: .78rem; font-weight: 900; letter-spacing: .05em; text-transform: uppercase; }
+    .choices { display: flex; gap: 9px; flex-wrap: wrap; }
+    .choice { flex: 1 1 150px; min-height: 46px; padding: 9px 14px; border: 2px solid var(--border); border-radius: 11px; color: var(--text); background: var(--surface-2); font-weight: 850; cursor: pointer; }
+    .choice:hover { border-color: var(--subject); }
+    .choice[aria-pressed="true"] { border-color: var(--subject); color: var(--subject-dark); background: var(--subject-soft); }
+    .choice.choice-correct { border-color: var(--correct); color: #1b5e20; background: var(--correct-soft); }
+    .choice.choice-wrong { border-color: var(--error); color: #8e1b1b; background: var(--error-soft); }
+    .analysis-actions { margin-top: 20px; }
+
+    .results-title { text-align: center; font-size: clamp(2rem,6vw,3.1rem); line-height: 1.08; }
+    .score-ring { display: grid; width: 150px; height: 150px; margin: 26px auto; place-items: center; border: 13px solid var(--subject-soft); border-top-color: var(--subject); border-right-color: var(--subject); border-radius: 50%; color: var(--subject-dark); }
+    .score-number { display: block; font-size: 2.2rem; font-weight: 950; line-height: 1; text-align: center; }
+    .score-label { display: block; margin-top: 5px; color: var(--muted); font-size: .73rem; font-weight: 800; text-align: center; text-transform: uppercase; }
+    .summary-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin: 0 auto 26px; }
+    .summary-item { padding: 16px 10px; border: 1px solid var(--border); border-radius: 14px; background: var(--surface-2); text-align: center; }
+    .summary-item strong { display: block; color: var(--subject-dark); font-size: 1.4rem; }
+    .summary-item span { color: var(--muted); font-size: .82rem; font-weight: 700; }
+    .review { margin-top: 32px; }
+    .review-list { display: grid; gap: 12px; margin: 0; padding: 0; list-style: none; }
+    .review-item { padding: 15px 17px; border-left: 5px solid var(--error); border-radius: 12px; background: var(--error-soft); }
+    .review-sentence { display: block; margin-bottom: 7px; font-weight: 800; }
+    .review-analysis { color: #7f1d1d; font-size: .9rem; }
+
+    .board-content { padding: clamp(20px,4vw,38px); }
+    .board-note { margin: 0 0 18px; color: var(--muted); text-align: center; font-size: 1rem; font-weight: 750; }
+    .board-list { display: block; overflow: hidden; margin: 0; padding: 0; border: 2px solid #dbe6dd; border-radius: 18px; background: var(--surface-2); list-style: none; counter-reset: board-sentence; }
+    .board-item { position: relative; min-height: 84px; padding: 17px 150px 17px 66px; counter-increment: board-sentence; }
+    .board-item + .board-item { border-top: 1px solid var(--border); }
+    .board-item::before { content: counter(board-sentence); position: absolute; left: 17px; top: 20px; display: grid; width: 34px; height: 34px; place-items: center; border-radius: 10px; color: #fff; background: var(--subject); font-weight: 950; }
+    .board-sentence { font-size: clamp(1.08rem,2.25vw,1.45rem); font-weight: 800; line-height: 1.45; }
+    .board-answer { display: block; margin-top: 9px; color: #1b5e20; font-size: .9rem; font-weight: 750; line-height: 1.45; }
+    .board-answer[hidden] { display: none; }
+    .board-reveal { position: absolute; top: 20px; right: 16px; min-width: 112px; padding: 8px 11px; border: 1px solid var(--subject); border-radius: 10px; color: var(--subject-dark); background: #fff; font-size: .82rem; font-weight: 900; cursor: pointer; }
+    .board-reveal:hover { color: #fff; background: var(--subject); }
+    .board-actions { margin-top: 22px; }
+
+    dialog { width: min(92vw,680px); padding: 0; border: 0; border-radius: 22px; color: var(--text); background: #fff; box-shadow: 0 24px 70px rgba(15,40,24,.28); }
+    dialog::backdrop { background: rgba(8,28,15,.55); backdrop-filter: blur(3px); }
+    .dialog-head { padding: 20px 24px; color: #fff; background: var(--subject); }
+    .dialog-head h2 { margin-bottom: 0; }
+    .dialog-body { padding: 24px; }
+    .steps { display: grid; gap: 12px; margin: 0 0 22px; padding: 0; list-style: none; counter-reset: steps; }
+    .steps li { position: relative; min-height: 42px; padding-left: 54px; counter-increment: steps; }
+    .steps li::before { content: counter(steps); position: absolute; left: 0; top: -3px; display: grid; width: 38px; height: 38px; place-items: center; border-radius: 11px; color: #fff; background: var(--subject); font-weight: 900; }
+    .example { padding: 14px 16px; border: 1px solid #a7d5b5; border-radius: 12px; background: var(--subject-soft); }
+
+    @media (max-width:700px) {
+      .round-options { grid-template-columns: repeat(2,1fr); }
+      .game-top { grid-template-columns: 1fr 1fr; }
+      .progress-wrap { grid-column: 1/-1; }
+      .summary-grid { grid-template-columns: 1fr; }
+      .sentence { justify-content: flex-start; padding: 16px; }
+      .board-item { padding-right: 16px; }
+      .board-reveal { position: static; margin-top: 10px; }
+    }
+    @media (prefers-reduced-motion:reduce) { *,*::before,*::after { transition-duration:.01ms !important; scroll-behavior:auto !important; } }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <div class="brand" aria-label="Beta-Urreko"><span class="brand-mark" aria-hidden="true">BU</span><span>Beta-Urreko</span></div>
+    <section class="shell">
+      <div id="start-screen" class="screen">
+        <header class="hero">
+          <div class="hero-row"><h1>IZENAK AZTERTU</h1><button class="help-button" type="button" data-open-help>Nola jokatu?</button></div>
+          <p class="subtitle">Aurkitu esaldiko izenak eta aztertu bakoitzaren ezaugarriak.</p>
+        </header>
+        <div class="content">
+          <span class="section-label">Aukeratu partidaren luzera</span>
+          <div class="round-options" role="group" aria-label="Galdera kopurua">
+            <button class="round-option" type="button" data-count="10" aria-pressed="false"><span class="round-number">10</span><span class="round-text">esaldi</span></button>
+            <button class="round-option" type="button" data-count="20" aria-pressed="true"><span class="round-number">20</span><span class="round-text">esaldi</span></button>
+            <button class="round-option" type="button" data-count="50" aria-pressed="false"><span class="round-number">50</span><span class="round-text">esaldi</span></button>
+            <button class="round-option" type="button" data-count="100" aria-pressed="false"><span class="round-number">100</span><span class="round-text">esaldi</span></button>
+            <button id="board-button" class="round-option board-launch" type="button"><span class="round-number">Arbela</span><span class="round-text">5 esaldi batera</span></button>
+          </div>
+          <div class="button-row"><button id="start-button" class="button button-primary" type="button">Hasi jolasten</button></div>
+        </div>
+      </div>
+
+      <div id="game-screen" class="screen" hidden>
+        <header class="hero"><div class="hero-row"><h1>IZENAK AZTERTU</h1></div><p class="subtitle">Lehenik aurkitu izenak; ondoren, aztertu.</p></header>
+        <div class="content">
+          <div class="game-top">
+            <div class="progress-wrap"><div class="progress-labels"><span id="progress-text">1 / 20</span><span id="percent-text">0%</span></div><div class="progress-track" aria-hidden="true"><div id="progress-bar" class="progress-bar"></div></div></div>
+            <div class="stat"><span id="score-stat" class="stat-value">0</span><span class="stat-label">Lehen saiakeran</span></div>
+            <div class="stat"><span id="time-stat" class="stat-value">00:00</span><span class="stat-label">Denbora</span></div>
+          </div>
+          <section class="question-card">
+            <div id="selection-phase">
+              <p class="phase-title">1. pausoa · Izenak aurkitu</p>
+              <p class="instruction">Sakatu esaldiko izen guztiak. Izen batek deklinabide-marka izan dezake.</p>
+              <div id="sentence" class="sentence" aria-label="Hautatu izenak"></div>
+              <div class="button-row"><button id="check-nouns-button" class="button button-primary" type="button">Izenak egiaztatu</button></div>
+              <div id="selection-feedback" class="feedback" role="status" aria-live="polite"></div>
+            </div>
+
+            <div id="analysis-phase" class="analysis" hidden>
+              <p class="phase-title">2. pausoa · Izena aztertu</p>
+              <div class="noun-head"><span id="noun-counter" class="noun-counter">1 / 3</span><div><h2 id="noun-name" class="noun-name">mendi</h2><span id="noun-surface" class="noun-surface">Esaldian: mendian</span></div></div>
+              <div id="choice-groups" class="choice-groups"></div>
+              <div id="analysis-feedback" class="feedback" role="status" aria-live="polite"></div>
+              <div class="button-row analysis-actions">
+                <button id="check-analysis-button" class="button button-primary" type="button">Analisia egiaztatu</button>
+                <button id="continue-button" class="button button-primary" type="button" hidden>Hurrengo izena</button>
+              </div>
+            </div>
+            <div class="button-row" style="margin-top:22px"><button id="quit-button" class="button button-neutral" type="button">Menura itzuli</button></div>
+          </section>
+        </div>
+      </div>
+
+      <div id="results-screen" class="screen" hidden>
+        <header class="hero"><div class="hero-row"><h1>Partida amaitu da!</h1></div><p id="result-message" class="subtitle">Lan bikaina!</p></header>
+        <div class="content">
+          <h2 class="results-title">Zure emaitza</h2>
+          <div class="score-ring"><div><span id="final-score" class="score-number">0/20</span><span class="score-label">lehen saiakeran</span></div></div>
+          <div class="summary-grid">
+            <div class="summary-item"><strong id="final-percent">0%</strong><span>Akatsik gabeko esaldiak</span></div>
+            <div class="summary-item"><strong id="final-time">00:00</strong><span>Erabilitako denbora</span></div>
+            <div class="summary-item"><strong id="final-streak">0</strong><span>Segidarik onena</span></div>
+          </div>
+          <div id="review" class="review" hidden><h3>Berrikusteko esaldiak</h3><ul id="review-list" class="review-list"></ul></div>
+          <div class="button-row" style="margin-top:28px"><button id="retry-button" class="button button-primary" type="button">Berriro jokatu</button><button id="menu-button" class="button button-secondary" type="button">Hasierako menua</button></div>
+        </div>
+      </div>
+
+      <div id="board-screen" class="screen" hidden>
+        <header class="hero"><div class="hero-row"><h1>Arbela · 5 esaldi</h1></div><p class="subtitle">Bilatu izenak eta aztertu koadernoan.</p></header>
+        <div class="board-content">
+          <p class="board-note">Erantzunak ezkutatuta daude. Esaldi bakoitza banaka zuzendu dezakezu.</p>
+          <ol id="board-list" class="board-list"></ol>
+          <div class="button-row board-actions">
+            <button id="new-board-button" class="button button-primary" type="button">Beste 5 esaldi</button>
+            <button id="all-solutions-button" class="button button-secondary" type="button">Erantzun guztiak</button>
+            <button id="board-menu-button" class="button button-neutral" type="button">Hasierako menua</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <dialog id="help-dialog" aria-labelledby="help-title">
+    <div class="dialog-head"><h2 id="help-title">Nola jokatu?</h2></div>
+    <div class="dialog-body">
+      <ol class="steps">
+        <li>Partida arrunta egiteko, aukeratu esaldi kopurua. Bost esaldi arbelean batera erakusteko, sakatu <strong>Arbela</strong>.</li>
+        <li>Irakurri esaldia eta sakatu bertan agertzen diren <strong>izen guztiak</strong>.</li>
+        <li>Hautaketa zuzena denean, aztertu izen bakoitza bere <strong>oinarrizko forman</strong>.</li>
+        <li>Erabaki izena <strong>berezia</strong> edo <strong>arrunta</strong> den. Arrunta bada, sailkapenarekin jarraitu.</li>
+        <li>Aukeratu <strong>biziduna/bizigabea</strong> eta <strong>zenbakarria/zenbakaitza</strong>. Zenbakaitza bada, aukeratu <strong>neurgarria/neurgabea</strong>.</li>
+      </ol>
+      <p class="example"><strong>Adibidea:</strong> “Txakurrak ura edan du.” → <strong>txakur</strong>: arrunta, biziduna, zenbakarria. <strong>ur</strong>: arrunta, bizigabea, zenbakaitza, neurgarria.</p>
+      <div class="button-row"><button id="close-help" class="button button-primary" type="button">Ulertu dut</button></div>
+    </div>
+  </dialog>
+
+  <script>
+    const questions = [{"id":1,"sentence":"Olinpo mendian hainbat jainko bizi omen ziren.","nouns":[{"lemma":"Olinpo","surface":"Olinpo","tokenIndex":0,"type":"berezia"},{"lemma":"mendi","surface":"mendian","tokenIndex":1,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"},{"lemma":"jainko","surface":"jainko","tokenIndex":3,"type":"arrunta","alive":"biziduna","count":"zenbakarria"}]},{"id":2,"sentence":"Ateneak erronka zaila jarri zion Aracneri.","nouns":[{"lemma":"Atenea","surface":"Ateneak","tokenIndex":0,"type":"berezia"},{"lemma":"erronka","surface":"erronka","tokenIndex":1,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"},{"lemma":"Aracne","surface":"Aracneri","tokenIndex":5,"type":"berezia"}]},{"id":3,"sentence":"Ehuleak sei kilo artile erabili zituen tapiza ehuntzeko.","nouns":[{"lemma":"ehule","surface":"Ehuleak","tokenIndex":0,"type":"arrunta","alive":"biziduna","count":"zenbakarria"},{"lemma":"kilo","surface":"kilo","tokenIndex":2,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"},{"lemma":"artile","surface":"artile","tokenIndex":3,"type":"arrunta","alive":"bizigabea","count":"zenbakaitza","measure":"neurgarria"},{"lemma":"tapiz","surface":"tapiza","tokenIndex":6,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"}]},{"id":4,"sentence":"Maitek emakume haren berokia hautsi zuen.","nouns":[{"lemma":"Maite","surface":"Maitek","tokenIndex":0,"type":"berezia"},{"lemma":"emakume","surface":"emakume","tokenIndex":1,"type":"arrunta","alive":"biziduna","count":"zenbakarria"},{"lemma":"beroki","surface":"berokia","tokenIndex":3,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"}]},{"id":5,"sentence":"Baserritarrak hiru litro esne ekarri ditu azokara.","nouns":[{"lemma":"baserritar","surface":"Baserritarrak","tokenIndex":0,"type":"arrunta","alive":"biziduna","count":"zenbakarria"},{"lemma":"litro","surface":"litro","tokenIndex":2,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"},{"lemma":"esne","surface":"esne","tokenIndex":3,"type":"arrunta","alive":"bizigabea","count":"zenbakaitza","measure":"neurgarria"},{"lemma":"azoka","surface":"azokara","tokenIndex":6,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"}]},{"id":6,"sentence":"Anerrek bi sagar eta ogi pixka bat jan ditu.","nouns":[{"lemma":"Aner","surface":"Anerrek","tokenIndex":0,"type":"berezia"},{"lemma":"sagar","surface":"sagar","tokenIndex":2,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"},{"lemma":"ogi","surface":"ogi","tokenIndex":4,"type":"arrunta","alive":"bizigabea","count":"zenbakaitza","measure":"neurgarria"}]},{"id":7,"sentence":"Irakasleak pazientzia handiz azaldu du ariketa.","nouns":[{"lemma":"irakasle","surface":"Irakasleak","tokenIndex":0,"type":"arrunta","alive":"biziduna","count":"zenbakarria"},{"lemma":"pazientzia","surface":"pazientzia","tokenIndex":1,"type":"arrunta","alive":"bizigabea","count":"zenbakaitza","measure":"neurgaitza"},{"lemma":"ariketa","surface":"ariketa","tokenIndex":5,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"}]},{"id":8,"sentence":"Txakurrak katu bat ikusi du lorategian.","nouns":[{"lemma":"txakur","surface":"Txakurrak","tokenIndex":0,"type":"arrunta","alive":"biziduna","count":"zenbakarria"},{"lemma":"katu","surface":"katu","tokenIndex":1,"type":"arrunta","alive":"biziduna","count":"zenbakarria"},{"lemma":"lorategi","surface":"lorategian","tokenIndex":5,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"}]},{"id":9,"sentence":"Leirek beldur handia sentitu zuen kobazuloan.","nouns":[{"lemma":"Leire","surface":"Leirek","tokenIndex":0,"type":"berezia"},{"lemma":"beldur","surface":"beldur","tokenIndex":1,"type":"arrunta","alive":"bizigabea","count":"zenbakaitza","measure":"neurgaitza"},{"lemma":"kobazulo","surface":"kobazuloan","tokenIndex":5,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"}]},{"id":10,"sentence":"Aitonak egurra sartu du tximinian.","nouns":[{"lemma":"aitona","surface":"Aitonak","tokenIndex":0,"type":"arrunta","alive":"biziduna","count":"zenbakarria"},{"lemma":"egur","surface":"egurra","tokenIndex":1,"type":"arrunta","alive":"bizigabea","count":"zenbakaitza","measure":"neurgarria"},{"lemma":"tximinia","surface":"tximinian","tokenIndex":4,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"}]},{"id":11,"sentence":"Umeek lau gaztelu egin dituzte hondarrarekin.","nouns":[{"lemma":"ume","surface":"Umeek","tokenIndex":0,"type":"arrunta","alive":"biziduna","count":"zenbakarria"},{"lemma":"gaztelu","surface":"gaztelu","tokenIndex":2,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"},{"lemma":"hondar","surface":"hondarrarekin","tokenIndex":5,"type":"arrunta","alive":"bizigabea","count":"zenbakaitza","measure":"neurgarria"}]},{"id":12,"sentence":"Sukaldariak gatza bota dio zopari.","nouns":[{"lemma":"sukaldari","surface":"Sukaldariak","tokenIndex":0,"type":"arrunta","alive":"biziduna","count":"zenbakarria"},{"lemma":"gatz","surface":"gatza","tokenIndex":1,"type":"arrunta","alive":"bizigabea","count":"zenbakaitza","measure":"neurgarria"},{"lemma":"zopa","surface":"zopari","tokenIndex":4,"type":"arrunta","alive":"bizigabea","count":"zenbakaitza","measure":"neurgarria"}]},{"id":13,"sentence":"June eta haren laguna ibaian bainatu dira.","nouns":[{"lemma":"June","surface":"June","tokenIndex":0,"type":"berezia"},{"lemma":"lagun","surface":"laguna","tokenIndex":3,"type":"arrunta","alive":"biziduna","count":"zenbakarria"},{"lemma":"ibai","surface":"ibaian","tokenIndex":4,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"}]},{"id":14,"sentence":"Medikuak gaixoaren tenperatura neurtu du.","nouns":[{"lemma":"mediku","surface":"Medikuak","tokenIndex":0,"type":"arrunta","alive":"biziduna","count":"zenbakarria"},{"lemma":"gaixo","surface":"gaixoaren","tokenIndex":1,"type":"arrunta","alive":"biziduna","count":"zenbakarria"},{"lemma":"tenperatura","surface":"tenperatura","tokenIndex":2,"type":"arrunta","alive":"bizigabea","count":"zenbakaitza","measure":"neurgarria"}]},{"id":15,"sentence":"Haizeak zuhaitzaren adarrak mugitu ditu.","nouns":[{"lemma":"haize","surface":"Haizeak","tokenIndex":0,"type":"arrunta","alive":"bizigabea","count":"zenbakaitza","measure":"neurgaitza"},{"lemma":"zuhaitz","surface":"zuhaitzaren","tokenIndex":1,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"},{"lemma":"adar","surface":"adarrak","tokenIndex":2,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"}]},{"id":16,"sentence":"Neskak maitasun handiz zaindu du untxia.","nouns":[{"lemma":"neska","surface":"Neskak","tokenIndex":0,"type":"arrunta","alive":"biziduna","count":"zenbakarria"},{"lemma":"maitasun","surface":"maitasun","tokenIndex":1,"type":"arrunta","alive":"bizigabea","count":"zenbakaitza","measure":"neurgaitza"},{"lemma":"untxi","surface":"untxia","tokenIndex":5,"type":"arrunta","alive":"biziduna","count":"zenbakarria"}]},{"id":17,"sentence":"Koldok bost kilo arroz erosi ditu dendan.","nouns":[{"lemma":"Koldo","surface":"Koldok","tokenIndex":0,"type":"berezia"},{"lemma":"kilo","surface":"kilo","tokenIndex":2,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"},{"lemma":"arroz","surface":"arroz","tokenIndex":3,"type":"arrunta","alive":"bizigabea","count":"zenbakaitza","measure":"neurgarria"},{"lemma":"denda","surface":"dendan","tokenIndex":6,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"}]},{"id":18,"sentence":"Zaldiak ura edan du iturrian.","nouns":[{"lemma":"zaldi","surface":"Zaldiak","tokenIndex":0,"type":"arrunta","alive":"biziduna","count":"zenbakarria"},{"lemma":"ur","surface":"ura","tokenIndex":1,"type":"arrunta","alive":"bizigabea","count":"zenbakaitza","measure":"neurgarria"},{"lemma":"iturri","surface":"iturrian","tokenIndex":4,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"}]},{"id":19,"sentence":"Ikasleek isiltasuna behar dute azterketan.","nouns":[{"lemma":"ikasle","surface":"Ikasleek","tokenIndex":0,"type":"arrunta","alive":"biziduna","count":"zenbakarria"},{"lemma":"isiltasun","surface":"isiltasuna","tokenIndex":1,"type":"arrunta","alive":"bizigabea","count":"zenbakaitza","measure":"neurgaitza"},{"lemma":"azterketa","surface":"azterketan","tokenIndex":4,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"}]},{"id":20,"sentence":"Arrantzaleak bi arrain harrapatu ditu itsasoan.","nouns":[{"lemma":"arrantzale","surface":"Arrantzaleak","tokenIndex":0,"type":"arrunta","alive":"biziduna","count":"zenbakarria"},{"lemma":"arrain","surface":"arrain","tokenIndex":2,"type":"arrunta","alive":"biziduna","count":"zenbakarria"},{"lemma":"itsaso","surface":"itsasoan","tokenIndex":5,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"}]},{"id":21,"sentence":"Amak olioa bota du zartaginean.","nouns":[{"lemma":"ama","surface":"Amak","tokenIndex":0,"type":"arrunta","alive":"biziduna","count":"zenbakarria"},{"lemma":"olio","surface":"olioa","tokenIndex":1,"type":"arrunta","alive":"bizigabea","count":"zenbakaitza","measure":"neurgarria"},{"lemma":"zartagin","surface":"zartaginean","tokenIndex":4,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"}]},{"id":22,"sentence":"Martak lotsa sentitu du antzokian.","nouns":[{"lemma":"Marta","surface":"Martak","tokenIndex":0,"type":"berezia"},{"lemma":"lotsa","surface":"lotsa","tokenIndex":1,"type":"arrunta","alive":"bizigabea","count":"zenbakaitza","measure":"neurgaitza"},{"lemma":"antzoki","surface":"antzokian","tokenIndex":4,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"}]},{"id":23,"sentence":"Erleek eztia egiten dute erlauntzean.","nouns":[{"lemma":"erle","surface":"Erleek","tokenIndex":0,"type":"arrunta","alive":"biziduna","count":"zenbakarria"},{"lemma":"ezti","surface":"eztia","tokenIndex":1,"type":"arrunta","alive":"bizigabea","count":"zenbakaitza","measure":"neurgarria"},{"lemma":"erlauntz","surface":"erlauntzean","tokenIndex":4,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"}]},{"id":24,"sentence":"Nekazariak hamar patata bildu ditu baratzean.","nouns":[{"lemma":"nekazari","surface":"Nekazariak","tokenIndex":0,"type":"arrunta","alive":"biziduna","count":"zenbakarria"},{"lemma":"patata","surface":"patata","tokenIndex":2,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"},{"lemma":"baratze","surface":"baratzean","tokenIndex":5,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"}]},{"id":25,"sentence":"Mendizaleek hotz handia izan dute tontorrean.","nouns":[{"lemma":"mendizale","surface":"Mendizaleek","tokenIndex":0,"type":"arrunta","alive":"biziduna","count":"zenbakarria"},{"lemma":"hotz","surface":"hotz","tokenIndex":1,"type":"arrunta","alive":"bizigabea","count":"zenbakaitza","measure":"neurgaitza"},{"lemma":"tontor","surface":"tontorrean","tokenIndex":5,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"}]},{"id":26,"sentence":"Irati basoan pago handi bat dago.","nouns":[{"lemma":"Irati","surface":"Irati","tokenIndex":0,"type":"berezia"},{"lemma":"baso","surface":"basoan","tokenIndex":1,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"},{"lemma":"pago","surface":"pago","tokenIndex":2,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"}]},{"id":27,"sentence":"Katuak esnea edan du ontzitik.","nouns":[{"lemma":"katu","surface":"Katuak","tokenIndex":0,"type":"arrunta","alive":"biziduna","count":"zenbakarria"},{"lemma":"esne","surface":"esnea","tokenIndex":1,"type":"arrunta","alive":"bizigabea","count":"zenbakaitza","measure":"neurgarria"},{"lemma":"ontzi","surface":"ontzitik","tokenIndex":4,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"}]},{"id":28,"sentence":"Anek poza sentitu du oparia irekitzean.","nouns":[{"lemma":"Ane","surface":"Anek","tokenIndex":0,"type":"berezia"},{"lemma":"poz","surface":"poza","tokenIndex":1,"type":"arrunta","alive":"bizigabea","count":"zenbakaitza","measure":"neurgaitza"},{"lemma":"opari","surface":"oparia","tokenIndex":4,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"}]},{"id":29,"sentence":"Okina irina eta ura nahasten ari da.","nouns":[{"lemma":"okin","surface":"Okina","tokenIndex":0,"type":"arrunta","alive":"biziduna","count":"zenbakarria"},{"lemma":"irin","surface":"irina","tokenIndex":1,"type":"arrunta","alive":"bizigabea","count":"zenbakaitza","measure":"neurgarria"},{"lemma":"ur","surface":"ura","tokenIndex":3,"type":"arrunta","alive":"bizigabea","count":"zenbakaitza","measure":"neurgarria"}]},{"id":30,"sentence":"Haurrak hiru harri aurkitu ditu hondartzan.","nouns":[{"lemma":"haur","surface":"Haurrak","tokenIndex":0,"type":"arrunta","alive":"biziduna","count":"zenbakarria"},{"lemma":"harri","surface":"harri","tokenIndex":2,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"},{"lemma":"hondartza","surface":"hondartzan","tokenIndex":5,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"}]},{"id":31,"sentence":"Amonak artilea erabili du jertsea egiteko.","nouns":[{"lemma":"amona","surface":"Amonak","tokenIndex":0,"type":"arrunta","alive":"biziduna","count":"zenbakarria"},{"lemma":"artile","surface":"artilea","tokenIndex":1,"type":"arrunta","alive":"bizigabea","count":"zenbakaitza","measure":"neurgarria"},{"lemma":"jertse","surface":"jertsea","tokenIndex":4,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"}]},{"id":32,"sentence":"Suhiltzaileek ausardia handia erakutsi dute sutean.","nouns":[{"lemma":"suhiltzaile","surface":"Suhiltzaileek","tokenIndex":0,"type":"arrunta","alive":"biziduna","count":"zenbakarria"},{"lemma":"ausardia","surface":"ausardia","tokenIndex":1,"type":"arrunta","alive":"bizigabea","count":"zenbakaitza","measure":"neurgaitza"},{"lemma":"sute","surface":"sutean","tokenIndex":5,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"}]},{"id":33,"sentence":"Behiak belarra jaten ari dira zelaian.","nouns":[{"lemma":"behi","surface":"Behiak","tokenIndex":0,"type":"arrunta","alive":"biziduna","count":"zenbakarria"},{"lemma":"belar","surface":"belarra","tokenIndex":1,"type":"arrunta","alive":"bizigabea","count":"zenbakaitza","measure":"neurgarria"},{"lemma":"zelai","surface":"zelaian","tokenIndex":5,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"}]},{"id":34,"sentence":"Markelek bi botila ur eraman ditu txangora.","nouns":[{"lemma":"Markel","surface":"Markelek","tokenIndex":0,"type":"berezia"},{"lemma":"botila","surface":"botila","tokenIndex":2,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"},{"lemma":"ur","surface":"ur","tokenIndex":3,"type":"arrunta","alive":"bizigabea","count":"zenbakaitza","measure":"neurgarria"},{"lemma":"txango","surface":"txangora","tokenIndex":6,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"}]},{"id":35,"sentence":"Musikariak gitarra jo du plazan.","nouns":[{"lemma":"musikari","surface":"Musikariak","tokenIndex":0,"type":"arrunta","alive":"biziduna","count":"zenbakarria"},{"lemma":"gitarra","surface":"gitarra","tokenIndex":1,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"},{"lemma":"plaza","surface":"plazan","tokenIndex":4,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"}]},{"id":36,"sentence":"Elurrak herriko teilatuak estali ditu.","nouns":[{"lemma":"elur","surface":"Elurrak","tokenIndex":0,"type":"arrunta","alive":"bizigabea","count":"zenbakaitza","measure":"neurgarria"},{"lemma":"herri","surface":"herriko","tokenIndex":1,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"},{"lemma":"teilatu","surface":"teilatuak","tokenIndex":2,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"}]},{"id":37,"sentence":"June irakasleak ipuin bat irakurri du gelan.","nouns":[{"lemma":"June","surface":"June","tokenIndex":0,"type":"berezia"},{"lemma":"irakasle","surface":"irakasleak","tokenIndex":1,"type":"arrunta","alive":"biziduna","count":"zenbakarria"},{"lemma":"ipuin","surface":"ipuin","tokenIndex":2,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"},{"lemma":"gela","surface":"gelan","tokenIndex":6,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"}]},{"id":38,"sentence":"Mutilak haserrea adierazi du oihu batekin.","nouns":[{"lemma":"mutil","surface":"Mutilak","tokenIndex":0,"type":"arrunta","alive":"biziduna","count":"zenbakarria"},{"lemma":"haserre","surface":"haserrea","tokenIndex":1,"type":"arrunta","alive":"bizigabea","count":"zenbakaitza","measure":"neurgaitza"},{"lemma":"oihu","surface":"oihu","tokenIndex":4,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"}]},{"id":39,"sentence":"Baserrian zazpi oilo eta oilar bat daude.","nouns":[{"lemma":"baserri","surface":"Baserrian","tokenIndex":0,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"},{"lemma":"oilo","surface":"oilo","tokenIndex":2,"type":"arrunta","alive":"biziduna","count":"zenbakarria"},{"lemma":"oilar","surface":"oilar","tokenIndex":4,"type":"arrunta","alive":"biziduna","count":"zenbakarria"}]},{"id":40,"sentence":"Aitak kafea eta azukrea jarri ditu mahaian.","nouns":[{"lemma":"aita","surface":"Aitak","tokenIndex":0,"type":"arrunta","alive":"biziduna","count":"zenbakarria"},{"lemma":"kafe","surface":"kafea","tokenIndex":1,"type":"arrunta","alive":"bizigabea","count":"zenbakaitza","measure":"neurgarria"},{"lemma":"azukre","surface":"azukrea","tokenIndex":3,"type":"arrunta","alive":"bizigabea","count":"zenbakaitza","measure":"neurgarria"},{"lemma":"mahai","surface":"mahaian","tokenIndex":6,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"}]},{"id":41,"sentence":"Itsasoak lasaitasuna ematen dio Mireni.","nouns":[{"lemma":"itsaso","surface":"Itsasoak","tokenIndex":0,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"},{"lemma":"lasaitasun","surface":"lasaitasuna","tokenIndex":1,"type":"arrunta","alive":"bizigabea","count":"zenbakaitza","measure":"neurgaitza"},{"lemma":"Miren","surface":"Mireni","tokenIndex":4,"type":"berezia"}]},{"id":42,"sentence":"Lorazainak hiru arrosa landatu ditu parkean.","nouns":[{"lemma":"lorazain","surface":"Lorazainak","tokenIndex":0,"type":"arrunta","alive":"biziduna","count":"zenbakarria"},{"lemma":"arrosa","surface":"arrosa","tokenIndex":2,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"},{"lemma":"parke","surface":"parkean","tokenIndex":5,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"}]},{"id":43,"sentence":"Haurrek lokatza aurkitu dute bidean.","nouns":[{"lemma":"haur","surface":"Haurrek","tokenIndex":0,"type":"arrunta","alive":"biziduna","count":"zenbakarria"},{"lemma":"lokatz","surface":"lokatza","tokenIndex":1,"type":"arrunta","alive":"bizigabea","count":"zenbakaitza","measure":"neurgarria"},{"lemma":"bide","surface":"bidean","tokenIndex":4,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"}]},{"id":44,"sentence":"Peru beldur da armiarmak ikusten dituenean.","nouns":[{"lemma":"Peru","surface":"Peru","tokenIndex":0,"type":"berezia"},{"lemma":"beldur","surface":"beldur","tokenIndex":1,"type":"arrunta","alive":"bizigabea","count":"zenbakaitza","measure":"neurgaitza"},{"lemma":"armiarma","surface":"armiarmak","tokenIndex":3,"type":"arrunta","alive":"biziduna","count":"zenbakarria"}]},{"id":45,"sentence":"Zurginak egurrezko bi aulki egin ditu.","nouns":[{"lemma":"zurgin","surface":"Zurginak","tokenIndex":0,"type":"arrunta","alive":"biziduna","count":"zenbakarria"},{"lemma":"egur","surface":"egurrezko","tokenIndex":1,"type":"arrunta","alive":"bizigabea","count":"zenbakaitza","measure":"neurgarria"},{"lemma":"aulki","surface":"aulki","tokenIndex":3,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"}]},{"id":46,"sentence":"Nereak metro bat oihal erosi du jostunarentzat.","nouns":[{"lemma":"Nerea","surface":"Nereak","tokenIndex":0,"type":"berezia"},{"lemma":"metro","surface":"metro","tokenIndex":1,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"},{"lemma":"oihal","surface":"oihal","tokenIndex":3,"type":"arrunta","alive":"bizigabea","count":"zenbakaitza","measure":"neurgarria"},{"lemma":"jostun","surface":"jostunarentzat","tokenIndex":6,"type":"arrunta","alive":"biziduna","count":"zenbakarria"}]},{"id":47,"sentence":"Txoriak habia egin du haritzaren adarrean.","nouns":[{"lemma":"txori","surface":"Txoriak","tokenIndex":0,"type":"arrunta","alive":"biziduna","count":"zenbakarria"},{"lemma":"habia","surface":"habia","tokenIndex":1,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"},{"lemma":"haritz","surface":"haritzaren","tokenIndex":4,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"},{"lemma":"adar","surface":"adarrean","tokenIndex":5,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"}]},{"id":48,"sentence":"Ikasleak jakin-min handia erakutsi du museoan.","nouns":[{"lemma":"ikasle","surface":"Ikasleak","tokenIndex":0,"type":"arrunta","alive":"biziduna","count":"zenbakarria"},{"lemma":"jakin-min","surface":"jakin-min","tokenIndex":1,"type":"arrunta","alive":"bizigabea","count":"zenbakaitza","measure":"neurgaitza"},{"lemma":"museo","surface":"museoan","tokenIndex":5,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"}]},{"id":49,"sentence":"Artzainak ardiak eraman ditu mendira.","nouns":[{"lemma":"artzain","surface":"Artzainak","tokenIndex":0,"type":"arrunta","alive":"biziduna","count":"zenbakarria"},{"lemma":"ardi","surface":"ardiak","tokenIndex":1,"type":"arrunta","alive":"biziduna","count":"zenbakarria"},{"lemma":"mendi","surface":"mendira","tokenIndex":4,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"}]},{"id":50,"sentence":"Sukaldariak kilo bat irin behar du bizkotxorako.","nouns":[{"lemma":"sukaldari","surface":"Sukaldariak","tokenIndex":0,"type":"arrunta","alive":"biziduna","count":"zenbakarria"},{"lemma":"kilo","surface":"kilo","tokenIndex":1,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"},{"lemma":"irin","surface":"irin","tokenIndex":3,"type":"arrunta","alive":"bizigabea","count":"zenbakaitza","measure":"neurgarria"},{"lemma":"bizkotxo","surface":"bizkotxorako","tokenIndex":6,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"}]},{"id":51,"sentence":"Euriak ura utzi du kaleko putzuetan.","nouns":[{"lemma":"euri","surface":"Euriak","tokenIndex":0,"type":"arrunta","alive":"bizigabea","count":"zenbakaitza","measure":"neurgarria"},{"lemma":"ur","surface":"ura","tokenIndex":1,"type":"arrunta","alive":"bizigabea","count":"zenbakaitza","measure":"neurgarria"},{"lemma":"kale","surface":"kaleko","tokenIndex":4,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"},{"lemma":"putzu","surface":"putzuetan","tokenIndex":5,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"}]},{"id":52,"sentence":"Ikerrek amorrua sentitu du partida galdu ondoren.","nouns":[{"lemma":"Iker","surface":"Ikerrek","tokenIndex":0,"type":"berezia"},{"lemma":"amorru","surface":"amorrua","tokenIndex":1,"type":"arrunta","alive":"bizigabea","count":"zenbakaitza","measure":"neurgaitza"},{"lemma":"partida","surface":"partida","tokenIndex":4,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"}]},{"id":53,"sentence":"Arratoiak gazta zati bat aurkitu du sukaldean.","nouns":[{"lemma":"arratoi","surface":"Arratoiak","tokenIndex":0,"type":"arrunta","alive":"biziduna","count":"zenbakarria"},{"lemma":"gazta","surface":"gazta","tokenIndex":1,"type":"arrunta","alive":"bizigabea","count":"zenbakaitza","measure":"neurgarria"},{"lemma":"zati","surface":"zati","tokenIndex":2,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"},{"lemma":"sukalde","surface":"sukaldean","tokenIndex":6,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"}]},{"id":54,"sentence":"Marinak bi koilarakada ezti bota ditu tean.","nouns":[{"lemma":"Marina","surface":"Marinak","tokenIndex":0,"type":"berezia"},{"lemma":"koilarakada","surface":"koilarakada","tokenIndex":2,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"},{"lemma":"ezti","surface":"ezti","tokenIndex":3,"type":"arrunta","alive":"bizigabea","count":"zenbakaitza","measure":"neurgarria"},{"lemma":"te","surface":"tean","tokenIndex":6,"type":"arrunta","alive":"bizigabea","count":"zenbakaitza","measure":"neurgarria"}]},{"id":55,"sentence":"Printzesak urrezko koroa zeraman buruan.","nouns":[{"lemma":"printzesa","surface":"Printzesak","tokenIndex":0,"type":"arrunta","alive":"biziduna","count":"zenbakarria"},{"lemma":"urre","surface":"urrezko","tokenIndex":1,"type":"arrunta","alive":"bizigabea","count":"zenbakaitza","measure":"neurgarria"},{"lemma":"koroa","surface":"koroa","tokenIndex":2,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"},{"lemma":"buru","surface":"buruan","tokenIndex":4,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"}]},{"id":56,"sentence":"Mutilak bero handia izan du hondartzan.","nouns":[{"lemma":"mutil","surface":"Mutilak","tokenIndex":0,"type":"arrunta","alive":"biziduna","count":"zenbakarria"},{"lemma":"bero","surface":"bero","tokenIndex":1,"type":"arrunta","alive":"bizigabea","count":"zenbakaitza","measure":"neurgaitza"},{"lemma":"hondartza","surface":"hondartzan","tokenIndex":5,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"}]},{"id":57,"sentence":"Basozainak hiru orein ikusi ditu basoan.","nouns":[{"lemma":"basozain","surface":"Basozainak","tokenIndex":0,"type":"arrunta","alive":"biziduna","count":"zenbakarria"},{"lemma":"orein","surface":"orein","tokenIndex":2,"type":"arrunta","alive":"biziduna","count":"zenbakarria"},{"lemma":"baso","surface":"basoan","tokenIndex":5,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"}]},{"id":58,"sentence":"Amonak maitasunez prestatu du txokolatea.","nouns":[{"lemma":"amona","surface":"Amonak","tokenIndex":0,"type":"arrunta","alive":"biziduna","count":"zenbakarria"},{"lemma":"maitasun","surface":"maitasunez","tokenIndex":1,"type":"arrunta","alive":"bizigabea","count":"zenbakaitza","measure":"neurgaitza"},{"lemma":"txokolate","surface":"txokolatea","tokenIndex":4,"type":"arrunta","alive":"bizigabea","count":"zenbakaitza","measure":"neurgarria"}]},{"id":59,"sentence":"Zaldunak ezpata eta ezkutua hartu ditu.","nouns":[{"lemma":"zaldun","surface":"Zaldunak","tokenIndex":0,"type":"arrunta","alive":"biziduna","count":"zenbakarria"},{"lemma":"ezpata","surface":"ezpata","tokenIndex":1,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"},{"lemma":"ezkutu","surface":"ezkutua","tokenIndex":3,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"}]},{"id":60,"sentence":"Etxean litro erdi zuku geratzen da.","nouns":[{"lemma":"etxe","surface":"Etxean","tokenIndex":0,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"},{"lemma":"litro","surface":"litro","tokenIndex":1,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"},{"lemma":"zuku","surface":"zuku","tokenIndex":3,"type":"arrunta","alive":"bizigabea","count":"zenbakaitza","measure":"neurgarria"}]},{"id":61,"sentence":"Ane eta Mikel bizikletaz joan dira eskolara.","nouns":[{"lemma":"Ane","surface":"Ane","tokenIndex":0,"type":"berezia"},{"lemma":"Mikel","surface":"Mikel","tokenIndex":2,"type":"berezia"},{"lemma":"bizikleta","surface":"bizikletaz","tokenIndex":3,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"},{"lemma":"eskola","surface":"eskolara","tokenIndex":6,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"}]},{"id":62,"sentence":"Umiltasuna bertute garrantzitsua da pertsonentzat.","nouns":[{"lemma":"umiltasun","surface":"Umiltasuna","tokenIndex":0,"type":"arrunta","alive":"bizigabea","count":"zenbakaitza","measure":"neurgaitza"},{"lemma":"bertute","surface":"bertute","tokenIndex":1,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"},{"lemma":"pertsona","surface":"pertsonentzat","tokenIndex":4,"type":"arrunta","alive":"biziduna","count":"zenbakarria"}]},{"id":63,"sentence":"Nekazariak garia erein du soroan.","nouns":[{"lemma":"nekazari","surface":"Nekazariak","tokenIndex":0,"type":"arrunta","alive":"biziduna","count":"zenbakarria"},{"lemma":"gari","surface":"garia","tokenIndex":1,"type":"arrunta","alive":"bizigabea","count":"zenbakaitza","measure":"neurgarria"},{"lemma":"soro","surface":"soroan","tokenIndex":4,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"}]},{"id":64,"sentence":"Korrikalariak lau kilometro egin ditu euripean.","nouns":[{"lemma":"korrikalari","surface":"Korrikalariak","tokenIndex":0,"type":"arrunta","alive":"biziduna","count":"zenbakarria"},{"lemma":"kilometro","surface":"kilometro","tokenIndex":2,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"},{"lemma":"euri","surface":"euripean","tokenIndex":5,"type":"arrunta","alive":"bizigabea","count":"zenbakaitza","measure":"neurgarria"}]},{"id":65,"sentence":"Untxiak bi azenario jan ditu kaiolan.","nouns":[{"lemma":"untxi","surface":"Untxiak","tokenIndex":0,"type":"arrunta","alive":"biziduna","count":"zenbakarria"},{"lemma":"azenario","surface":"azenario","tokenIndex":2,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"},{"lemma":"kaiola","surface":"kaiolan","tokenIndex":5,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"}]},{"id":66,"sentence":"Maitasunak eta adiskidetasunak zoriontasuna ekartzen dute.","nouns":[{"lemma":"maitasun","surface":"Maitasunak","tokenIndex":0,"type":"arrunta","alive":"bizigabea","count":"zenbakaitza","measure":"neurgaitza"},{"lemma":"adiskidetasun","surface":"adiskidetasunak","tokenIndex":2,"type":"arrunta","alive":"bizigabea","count":"zenbakaitza","measure":"neurgaitza"},{"lemma":"zoriontasun","surface":"zoriontasuna","tokenIndex":3,"type":"arrunta","alive":"bizigabea","count":"zenbakaitza","measure":"neurgaitza"}]},{"id":67,"sentence":"Olatzek hiru liburu hartu ditu liburutegitik.","nouns":[{"lemma":"Olatz","surface":"Olatzek","tokenIndex":0,"type":"berezia"},{"lemma":"liburu","surface":"liburu","tokenIndex":2,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"},{"lemma":"liburutegi","surface":"liburutegitik","tokenIndex":5,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"}]},{"id":68,"sentence":"Baserritarrak ardoa gorde du upel batean.","nouns":[{"lemma":"baserritar","surface":"Baserritarrak","tokenIndex":0,"type":"arrunta","alive":"biziduna","count":"zenbakarria"},{"lemma":"ardo","surface":"ardoa","tokenIndex":1,"type":"arrunta","alive":"bizigabea","count":"zenbakaitza","measure":"neurgarria"},{"lemma":"upel","surface":"upel","tokenIndex":4,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"}]},{"id":69,"sentence":"Sugeak sagua harrapatu du harriaren azpian.","nouns":[{"lemma":"suge","surface":"Sugeak","tokenIndex":0,"type":"arrunta","alive":"biziduna","count":"zenbakarria"},{"lemma":"sagu","surface":"sagua","tokenIndex":1,"type":"arrunta","alive":"biziduna","count":"zenbakarria"},{"lemma":"harri","surface":"harriaren","tokenIndex":4,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"}]},{"id":70,"sentence":"Neskak tristura sentitu du albistea entzutean.","nouns":[{"lemma":"neska","surface":"Neskak","tokenIndex":0,"type":"arrunta","alive":"biziduna","count":"zenbakarria"},{"lemma":"tristura","surface":"tristura","tokenIndex":1,"type":"arrunta","alive":"bizigabea","count":"zenbakaitza","measure":"neurgaitza"},{"lemma":"albiste","surface":"albistea","tokenIndex":4,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"}]},{"id":71,"sentence":"Gurasoek mahai berria erosi dute sukalderako.","nouns":[{"lemma":"guraso","surface":"Gurasoek","tokenIndex":0,"type":"arrunta","alive":"biziduna","count":"zenbakarria"},{"lemma":"mahai","surface":"mahai","tokenIndex":1,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"},{"lemma":"sukalde","surface":"sukalderako","tokenIndex":5,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"}]},{"id":72,"sentence":"Kimikariak alkohol pixka bat bota du ontzian.","nouns":[{"lemma":"kimikari","surface":"Kimikariak","tokenIndex":0,"type":"arrunta","alive":"biziduna","count":"zenbakarria"},{"lemma":"alkohol","surface":"alkohol","tokenIndex":1,"type":"arrunta","alive":"bizigabea","count":"zenbakaitza","measure":"neurgarria"},{"lemma":"ontzi","surface":"ontzian","tokenIndex":6,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"}]},{"id":73,"sentence":"Elefanteak ura bota dio kumeari tronparekin.","nouns":[{"lemma":"elefante","surface":"Elefanteak","tokenIndex":0,"type":"arrunta","alive":"biziduna","count":"zenbakarria"},{"lemma":"ur","surface":"ura","tokenIndex":1,"type":"arrunta","alive":"bizigabea","count":"zenbakaitza","measure":"neurgarria"},{"lemma":"kume","surface":"kumeari","tokenIndex":4,"type":"arrunta","alive":"biziduna","count":"zenbakarria"},{"lemma":"tronpa","surface":"tronparekin","tokenIndex":5,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"}]},{"id":74,"sentence":"Soldaduak adore handia erakutsi du guduan.","nouns":[{"lemma":"soldadu","surface":"Soldaduak","tokenIndex":0,"type":"arrunta","alive":"biziduna","count":"zenbakarria"},{"lemma":"adore","surface":"adore","tokenIndex":1,"type":"arrunta","alive":"bizigabea","count":"zenbakaitza","measure":"neurgaitza"},{"lemma":"gudu","surface":"guduan","tokenIndex":5,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"}]},{"id":75,"sentence":"June eta txakurra urmaelaren ondoan eseri dira.","nouns":[{"lemma":"June","surface":"June","tokenIndex":0,"type":"berezia"},{"lemma":"txakur","surface":"txakurra","tokenIndex":2,"type":"arrunta","alive":"biziduna","count":"zenbakarria"},{"lemma":"urmael","surface":"urmaelaren","tokenIndex":3,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"}]},{"id":76,"sentence":"Sukaldariak berrogeita hamar gramo gurin erabili ditu.","nouns":[{"lemma":"sukaldari","surface":"Sukaldariak","tokenIndex":0,"type":"arrunta","alive":"biziduna","count":"zenbakarria"},{"lemma":"gramo","surface":"gramo","tokenIndex":3,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"},{"lemma":"gurin","surface":"gurin","tokenIndex":4,"type":"arrunta","alive":"bizigabea","count":"zenbakaitza","measure":"neurgarria"}]},{"id":77,"sentence":"Inurriek ogi apurrak eraman dituzte habiara.","nouns":[{"lemma":"inurri","surface":"Inurriek","tokenIndex":0,"type":"arrunta","alive":"biziduna","count":"zenbakarria"},{"lemma":"ogi","surface":"ogi","tokenIndex":1,"type":"arrunta","alive":"bizigabea","count":"zenbakaitza","measure":"neurgarria"},{"lemma":"apur","surface":"apurrak","tokenIndex":2,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"},{"lemma":"habia","surface":"habiara","tokenIndex":5,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"}]},{"id":78,"sentence":"Zeloak arazoak sortu ditu bi lagunen artean.","nouns":[{"lemma":"zelo","surface":"Zeloak","tokenIndex":0,"type":"arrunta","alive":"bizigabea","count":"zenbakaitza","measure":"neurgaitza"},{"lemma":"arazo","surface":"arazoak","tokenIndex":1,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"},{"lemma":"lagun","surface":"lagunen","tokenIndex":5,"type":"arrunta","alive":"biziduna","count":"zenbakarria"}]},{"id":79,"sentence":"Maddik arkatz bat eta bi koaderno ekarri ditu.","nouns":[{"lemma":"Maddi","surface":"Maddik","tokenIndex":0,"type":"berezia"},{"lemma":"arkatz","surface":"arkatz","tokenIndex":1,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"},{"lemma":"koaderno","surface":"koaderno","tokenIndex":5,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"}]},{"id":80,"sentence":"Ontzian hiru litro gasolina geratzen dira.","nouns":[{"lemma":"ontzi","surface":"Ontzian","tokenIndex":0,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"},{"lemma":"litro","surface":"litro","tokenIndex":2,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"},{"lemma":"gasolina","surface":"gasolina","tokenIndex":3,"type":"arrunta","alive":"bizigabea","count":"zenbakaitza","measure":"neurgarria"}]},{"id":81,"sentence":"Ehiztariak azeria ikusi du zuhaitzen artean.","nouns":[{"lemma":"ehiztari","surface":"Ehiztariak","tokenIndex":0,"type":"arrunta","alive":"biziduna","count":"zenbakarria"},{"lemma":"azeri","surface":"azeria","tokenIndex":1,"type":"arrunta","alive":"biziduna","count":"zenbakarria"},{"lemma":"zuhaitz","surface":"zuhaitzen","tokenIndex":4,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"}]},{"id":82,"sentence":"Alaitasunak aurpegia argitu dio Aneri.","nouns":[{"lemma":"alaitasun","surface":"Alaitasunak","tokenIndex":0,"type":"arrunta","alive":"bizigabea","count":"zenbakaitza","measure":"neurgaitza"},{"lemma":"aurpegi","surface":"aurpegia","tokenIndex":1,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"},{"lemma":"Aner","surface":"Aneri","tokenIndex":4,"type":"berezia"}]},{"id":83,"sentence":"Arotzak ate bat konpondu du mailuarekin.","nouns":[{"lemma":"arotz","surface":"Arotzak","tokenIndex":0,"type":"arrunta","alive":"biziduna","count":"zenbakarria"},{"lemma":"ate","surface":"ate","tokenIndex":1,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"},{"lemma":"mailu","surface":"mailuarekin","tokenIndex":5,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"}]},{"id":84,"sentence":"Umeak buztina erabili du irudia egiteko.","nouns":[{"lemma":"ume","surface":"Umeak","tokenIndex":0,"type":"arrunta","alive":"biziduna","count":"zenbakarria"},{"lemma":"buztin","surface":"buztina","tokenIndex":1,"type":"arrunta","alive":"bizigabea","count":"zenbakaitza","measure":"neurgarria"},{"lemma":"irudi","surface":"irudia","tokenIndex":4,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"}]},{"id":85,"sentence":"Erizainak bi gaixo artatu ditu goizean.","nouns":[{"lemma":"erizain","surface":"Erizainak","tokenIndex":0,"type":"arrunta","alive":"biziduna","count":"zenbakarria"},{"lemma":"gaixo","surface":"gaixo","tokenIndex":2,"type":"arrunta","alive":"biziduna","count":"zenbakarria"},{"lemma":"goiz","surface":"goizean","tokenIndex":5,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"}]},{"id":86,"sentence":"Justiziak eta bakeak garrantzi handia dute gizartean.","nouns":[{"lemma":"justizia","surface":"Justiziak","tokenIndex":0,"type":"arrunta","alive":"bizigabea","count":"zenbakaitza","measure":"neurgaitza"},{"lemma":"bake","surface":"bakeak","tokenIndex":2,"type":"arrunta","alive":"bizigabea","count":"zenbakaitza","measure":"neurgaitza"},{"lemma":"garrantzi","surface":"garrantzi","tokenIndex":3,"type":"arrunta","alive":"bizigabea","count":"zenbakaitza","measure":"neurgaitza"},{"lemma":"gizarte","surface":"gizartean","tokenIndex":6,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"}]},{"id":87,"sentence":"Sagarrondoak fruitu ugari eman ditu aurten.","nouns":[{"lemma":"sagarrondo","surface":"Sagarrondoak","tokenIndex":0,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"},{"lemma":"fruitu","surface":"fruitu","tokenIndex":1,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"}]},{"id":88,"sentence":"June txokolate beroa edaten ari da katilutik.","nouns":[{"lemma":"June","surface":"June","tokenIndex":0,"type":"berezia"},{"lemma":"txokolate","surface":"txokolate","tokenIndex":1,"type":"arrunta","alive":"bizigabea","count":"zenbakaitza","measure":"neurgarria"},{"lemma":"katilu","surface":"katilutik","tokenIndex":6,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"}]},{"id":89,"sentence":"Marinelak hiru izurde ikusi ditu ontzitik.","nouns":[{"lemma":"marinel","surface":"Marinelak","tokenIndex":0,"type":"arrunta","alive":"biziduna","count":"zenbakarria"},{"lemma":"izurde","surface":"izurde","tokenIndex":2,"type":"arrunta","alive":"biziduna","count":"zenbakarria"},{"lemma":"ontzi","surface":"ontzitik","tokenIndex":5,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"}]},{"id":90,"sentence":"Nekea nabari da jokalarien aurpegietan.","nouns":[{"lemma":"neke","surface":"Nekea","tokenIndex":0,"type":"arrunta","alive":"bizigabea","count":"zenbakaitza","measure":"neurgaitza"},{"lemma":"jokalari","surface":"jokalarien","tokenIndex":3,"type":"arrunta","alive":"biziduna","count":"zenbakarria"},{"lemma":"aurpegi","surface":"aurpegietan","tokenIndex":4,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"}]},{"id":91,"sentence":"Anek bost euro aurkitu ditu poltsikoan.","nouns":[{"lemma":"Ane","surface":"Anek","tokenIndex":0,"type":"berezia"},{"lemma":"euro","surface":"euro","tokenIndex":2,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"},{"lemma":"poltsiko","surface":"poltsikoan","tokenIndex":5,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"}]},{"id":92,"sentence":"Margolariak pintura urdina zabaldu du horman.","nouns":[{"lemma":"margolari","surface":"Margolariak","tokenIndex":0,"type":"arrunta","alive":"biziduna","count":"zenbakarria"},{"lemma":"pintura","surface":"pintura","tokenIndex":1,"type":"arrunta","alive":"bizigabea","count":"zenbakaitza","measure":"neurgarria"},{"lemma":"horma","surface":"horman","tokenIndex":5,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"}]},{"id":93,"sentence":"Basurdeak perretxikoak bilatzen ditu basoan.","nouns":[{"lemma":"basurde","surface":"Basurdeak","tokenIndex":0,"type":"arrunta","alive":"biziduna","count":"zenbakarria"},{"lemma":"perretxiko","surface":"perretxikoak","tokenIndex":1,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"},{"lemma":"baso","surface":"basoan","tokenIndex":4,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"}]},{"id":94,"sentence":"Lotsak isilik utzi du ikaslea.","nouns":[{"lemma":"lotsa","surface":"Lotsak","tokenIndex":0,"type":"arrunta","alive":"bizigabea","count":"zenbakaitza","measure":"neurgaitza"},{"lemma":"ikasle","surface":"ikaslea","tokenIndex":4,"type":"arrunta","alive":"biziduna","count":"zenbakarria"}]},{"id":95,"sentence":"Amak bi kilo tomate erosi ditu merkatuan.","nouns":[{"lemma":"ama","surface":"Amak","tokenIndex":0,"type":"arrunta","alive":"biziduna","count":"zenbakarria"},{"lemma":"kilo","surface":"kilo","tokenIndex":2,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"},{"lemma":"tomate","surface":"tomate","tokenIndex":3,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"},{"lemma":"merkatu","surface":"merkatuan","tokenIndex":6,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"}]},{"id":96,"sentence":"Kea leihotik sartu da gelara.","nouns":[{"lemma":"ke","surface":"Kea","tokenIndex":0,"type":"arrunta","alive":"bizigabea","count":"zenbakaitza","measure":"neurgarria"},{"lemma":"leiho","surface":"leihotik","tokenIndex":1,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"},{"lemma":"gela","surface":"gelara","tokenIndex":4,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"}]},{"id":97,"sentence":"Albaitariak txakurra eta katua aztertu ditu.","nouns":[{"lemma":"albaitari","surface":"Albaitariak","tokenIndex":0,"type":"arrunta","alive":"biziduna","count":"zenbakarria"},{"lemma":"txakur","surface":"txakurra","tokenIndex":1,"type":"arrunta","alive":"biziduna","count":"zenbakarria"},{"lemma":"katu","surface":"katua","tokenIndex":3,"type":"arrunta","alive":"biziduna","count":"zenbakarria"}]},{"id":98,"sentence":"Itxaropenak indarra eman dio gaixoari.","nouns":[{"lemma":"itxaropen","surface":"Itxaropenak","tokenIndex":0,"type":"arrunta","alive":"bizigabea","count":"zenbakaitza","measure":"neurgaitza"},{"lemma":"indar","surface":"indarra","tokenIndex":1,"type":"arrunta","alive":"bizigabea","count":"zenbakaitza","measure":"neurgaitza"},{"lemma":"gaixo","surface":"gaixoari","tokenIndex":4,"type":"arrunta","alive":"biziduna","count":"zenbakarria"}]},{"id":99,"sentence":"Jonek gazta eta urdaiazpikoa jarri ditu ogitartekoan.","nouns":[{"lemma":"Jon","surface":"Jonek","tokenIndex":0,"type":"berezia"},{"lemma":"gazta","surface":"gazta","tokenIndex":1,"type":"arrunta","alive":"bizigabea","count":"zenbakaitza","measure":"neurgarria"},{"lemma":"urdaiazpiko","surface":"urdaiazpikoa","tokenIndex":3,"type":"arrunta","alive":"bizigabea","count":"zenbakaitza","measure":"neurgarria"},{"lemma":"ogitarteko","surface":"ogitartekoan","tokenIndex":6,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"}]},{"id":100,"sentence":"Elenek hiru lore jarri ditu urez betetako pitxerrean.","nouns":[{"lemma":"Elene","surface":"Elenek","tokenIndex":0,"type":"berezia"},{"lemma":"lore","surface":"lore","tokenIndex":2,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"},{"lemma":"ur","surface":"urez","tokenIndex":5,"type":"arrunta","alive":"bizigabea","count":"zenbakaitza","measure":"neurgarria"},{"lemma":"pitxer","surface":"pitxerrean","tokenIndex":7,"type":"arrunta","alive":"bizigabea","count":"zenbakarria"}]}];
+
+    const $ = selector => document.querySelector(selector);
+    const screens = [$("#start-screen"), $("#game-screen"), $("#results-screen"), $("#board-screen")];
+    const helpDialog = $("#help-dialog");
+    let selectedCount = 20;
+    let round = [];
+    let boardRound = [];
+    let revealedBoardAnswers = new Set();
+    let questionIndex = 0;
+    let selectedTokens = new Set();
+    let selectionChecked = false;
+    let selectionLocked = false;
+    let nounIndex = 0;
+    let analysisChoice = {};
+    let analysisChecked = false;
+    let questionHadError = false;
+    let score = 0;
+    let streak = 0;
+    let bestStreak = 0;
+    let mistakes = [];
+    let startTime = 0;
+    let timerId = null;
+
+    function shuffle(items) {
+      const copy = [...items];
+      for (let i = copy.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+      return copy;
+    }
+
+    function showScreen(screen) {
+      screens.forEach(item => { item.hidden = item !== screen; });
+      window.scrollTo({top:0,behavior:"smooth"});
+    }
+
+    function formatTime(totalSeconds) {
+      const minutes = Math.floor(totalSeconds / 60).toString().padStart(2,"0");
+      const seconds = (totalSeconds % 60).toString().padStart(2,"0");
+      return `${minutes}:${seconds}`;
+    }
+    function elapsedSeconds() { return Math.floor((Date.now() - startTime) / 1000); }
+    function updateTimer() { $("#time-stat").textContent = formatTime(elapsedSeconds()); }
+
+    function startGame() {
+      round = shuffle(questions).slice(0,selectedCount);
+      questionIndex = 0;
+      score = 0;
+      streak = 0;
+      bestStreak = 0;
+      mistakes = [];
+      startTime = Date.now();
+      clearInterval(timerId);
+      timerId = setInterval(updateTimer,1000);
+      $("#time-stat").textContent = "00:00";
+      showScreen($("#game-screen"));
+      renderQuestion();
+    }
+
+    function renderQuestion() {
+      selectedTokens = new Set();
+      selectionChecked = false;
+      selectionLocked = false;
+      nounIndex = 0;
+      analysisChoice = {};
+      analysisChecked = false;
+      questionHadError = false;
+      $("#selection-phase").hidden = false;
+      $("#analysis-phase").hidden = true;
+      $("#selection-feedback").textContent = "";
+      $("#selection-feedback").className = "feedback";
+      updateProgress();
+      renderSentence();
+    }
+
+    function updateProgress() {
+      const percent = Math.round((questionIndex / round.length) * 100);
+      $("#progress-text").textContent = `${questionIndex + 1} / ${round.length}`;
+      $("#percent-text").textContent = `${percent}%`;
+      $("#progress-bar").style.width = `${percent}%`;
+      $("#score-stat").textContent = score;
+    }
+
+    function renderSentence() {
+      const box = $("#sentence");
+      box.replaceChildren();
+      const question = round[questionIndex];
+      const nounIndices = new Set(question.nouns.map(noun => noun.tokenIndex));
+      question.sentence.split(/\s+/).forEach((token,index) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "word";
+        button.textContent = token;
+        button.disabled = selectionLocked;
+        button.setAttribute("aria-pressed",String(selectedTokens.has(index)));
+        if (selectedTokens.has(index)) button.classList.add("selected");
+        if (selectionChecked && selectedTokens.has(index)) button.classList.add(nounIndices.has(index) ? "correct" : "wrong");
+        if (selectionLocked && nounIndices.has(index)) button.classList.add("correct");
+        button.addEventListener("click",() => toggleToken(index));
+        box.append(button);
+      });
+      $("#check-nouns-button").disabled = selectionLocked;
+    }
+
+    function toggleToken(index) {
+      if (selectionLocked) return;
+      if (selectedTokens.has(index)) selectedTokens.delete(index); else selectedTokens.add(index);
+      selectionChecked = false;
+      $("#selection-feedback").textContent = "";
+      $("#selection-feedback").className = "feedback";
+      renderSentence();
+    }
+
+    function checkNouns() {
+      const question = round[questionIndex];
+      const correct = new Set(question.nouns.map(noun => noun.tokenIndex));
+      const extras = [...selectedTokens].filter(index => !correct.has(index)).length;
+      const missing = [...correct].filter(index => !selectedTokens.has(index)).length;
+      selectionChecked = true;
+      if (extras === 0 && missing === 0) {
+        selectionLocked = true;
+        const feedback = $("#selection-feedback");
+        feedback.className = "feedback correct";
+        feedback.innerHTML = "<strong>Oso ondo!</strong> Izen guztiak aurkitu dituzu. Orain, aztertu banan-banan.";
+        renderSentence();
+        $("#analysis-phase").hidden = false;
+        renderAnalysis();
+        $("#analysis-phase").scrollIntoView({behavior:"smooth",block:"nearest"});
+      } else {
+        questionHadError = true;
+        const parts = [];
+        if (missing) parts.push(`${missing} izen falta ${missing === 1 ? "da" : "dira"}`);
+        if (extras) parts.push(`${extras} hitz soberan ${extras === 1 ? "dago" : "daude"}`);
+        const feedback = $("#selection-feedback");
+        feedback.className = "feedback wrong";
+        feedback.innerHTML = `<strong>Begiratu berriro:</strong> ${parts.join(" eta ")}.`;
+        renderSentence();
+      }
+    }
+
+    function choiceGroup(key,label,options) {
+      const group = document.createElement("div");
+      group.className = "choice-group";
+      const heading = document.createElement("span");
+      heading.className = "choice-label";
+      heading.textContent = label;
+      const choices = document.createElement("div");
+      choices.className = "choices";
+      const noun = round[questionIndex].nouns[nounIndex];
+      options.forEach(([value,text]) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "choice";
+        button.textContent = text;
+        button.setAttribute("aria-pressed",String(analysisChoice[key] === value));
+        if (analysisChecked && analysisChoice[key] === value) button.classList.add(noun[key] === value ? "choice-correct" : "choice-wrong");
+        button.addEventListener("click",() => selectAnalysis(key,value));
+        choices.append(button);
+      });
+      group.append(heading,choices);
+      return group;
+    }
+
+    function renderAnalysis() {
+      const noun = round[questionIndex].nouns[nounIndex];
+      $("#noun-counter").textContent = `${nounIndex + 1} / ${round[questionIndex].nouns.length}`;
+      $("#noun-name").textContent = noun.lemma;
+      $("#noun-surface").textContent = `Esaldian: ${noun.surface}`;
+      const groups = $("#choice-groups");
+      groups.replaceChildren();
+      groups.append(choiceGroup("type","Izen mota",[["berezia","Berezia"],["arrunta","Arrunta"]]));
+      if (analysisChoice.type === "arrunta") {
+        groups.append(choiceGroup("alive","Biziduna ala bizigabea?",[["biziduna","Biziduna"],["bizigabea","Bizigabea"]]));
+        groups.append(choiceGroup("count","Zenbakarria ala zenbakaitza?",[["zenbakarria","Zenbakarria"],["zenbakaitza","Zenbakaitza"]]));
+        if (analysisChoice.count === "zenbakaitza") groups.append(choiceGroup("measure","Neurgarria ala neurgabea?",[["neurgarria","Neurgarria"],["neurgaitza","Neurgabea"]]));
+      }
+      $("#analysis-feedback").textContent = "";
+      $("#analysis-feedback").className = "feedback";
+      $("#check-analysis-button").hidden = false;
+      $("#continue-button").hidden = true;
+      $("#check-analysis-button").disabled = !analysisReady();
+    }
+
+    function selectAnalysis(key,value) {
+      analysisChoice[key] = value;
+      if (key === "type" && value === "berezia") {
+        delete analysisChoice.alive; delete analysisChoice.count; delete analysisChoice.measure;
+      }
+      if (key === "count" && value === "zenbakarria") delete analysisChoice.measure;
+      analysisChecked = false;
+      renderAnalysis();
+    }
+
+    function analysisReady() {
+      if (!analysisChoice.type) return false;
+      if (analysisChoice.type === "berezia") return true;
+      if (!analysisChoice.alive || !analysisChoice.count) return false;
+      return analysisChoice.count !== "zenbakaitza" || Boolean(analysisChoice.measure);
+    }
+
+    function checkAnalysis() {
+      if (!analysisReady()) return;
+      const noun = round[questionIndex].nouns[nounIndex];
+      const keys = noun.type === "berezia" ? ["type"] : noun.count === "zenbakaitza" ? ["type","alive","count","measure"] : ["type","alive","count"];
+      const isCorrect = keys.every(key => analysisChoice[key] === noun[key]);
+      analysisChecked = true;
+      if (isCorrect) {
+        const feedback = $("#analysis-feedback");
+        feedback.className = "feedback correct";
+        feedback.innerHTML = `<strong>Zuzena!</strong> ${analysisText(noun)}.`;
+        renderCheckedChoices(noun,keys);
+        $("#check-analysis-button").hidden = true;
+        const moreNouns = nounIndex < round[questionIndex].nouns.length - 1;
+        $("#continue-button").textContent = moreNouns ? "Hurrengo izena" : (questionIndex < round.length - 1 ? "Hurrengo esaldia" : "Emaitzak ikusi");
+        $("#continue-button").hidden = false;
+        $("#continue-button").focus();
+      } else {
+        questionHadError = true;
+        const feedback = $("#analysis-feedback");
+        feedback.className = "feedback wrong";
+        feedback.innerHTML = "<strong>Badago akatsen bat.</strong> Begiratu gorriz markatutako aukerak eta saiatu berriro.";
+        renderCheckedChoices(noun,keys);
+      }
+    }
+
+    function renderCheckedChoices(noun,keys) {
+      document.querySelectorAll(".choice").forEach(button => {
+        const group = button.closest(".choice-group");
+        const groupIndex = [...$("#choice-groups").children].indexOf(group);
+        const key = ["type","alive","count","measure"][groupIndex];
+        if (button.getAttribute("aria-pressed") === "true" && keys.includes(key)) button.classList.add(analysisChoice[key] === noun[key] ? "choice-correct" : "choice-wrong");
+      });
+    }
+
+    function continueGame() {
+      if (nounIndex < round[questionIndex].nouns.length - 1) {
+        nounIndex += 1;
+        analysisChoice = {};
+        analysisChecked = false;
+        renderAnalysis();
+        $("#analysis-phase").scrollIntoView({behavior:"smooth",block:"nearest"});
+        return;
+      }
+      if (questionHadError) {
+        streak = 0;
+        mistakes.push(round[questionIndex]);
+      } else {
+        score += 1;
+        streak += 1;
+        bestStreak = Math.max(bestStreak,streak);
+      }
+      questionIndex += 1;
+      if (questionIndex >= round.length) finishGame(); else renderQuestion();
+    }
+
+    function analysisText(noun) {
+      if (noun.type === "berezia") return `${noun.lemma}: berezia`;
+      const parts = [noun.lemma,"arrunta",noun.alive,noun.count];
+      if (noun.count === "zenbakaitza") parts.push(noun.measure === "neurgaitza" ? "neurgabea" : noun.measure);
+      return parts.join(" · ");
+    }
+
+    function openBoard() {
+      boardRound = shuffle(questions).slice(0,5);
+      revealedBoardAnswers = new Set();
+      renderBoard();
+      showScreen($("#board-screen"));
+    }
+
+    function renderBoard() {
+      const list = $("#board-list");
+      list.replaceChildren();
+      boardRound.forEach(question => {
+        const item = document.createElement("li");
+        item.className = "board-item";
+
+        const sentence = document.createElement("div");
+        sentence.className = "board-sentence";
+        sentence.textContent = question.sentence;
+
+        const answer = document.createElement("span");
+        answer.className = "board-answer";
+        answer.textContent = question.nouns.map(analysisText).join(" | ");
+        answer.hidden = !revealedBoardAnswers.has(question.id);
+
+        const revealButton = document.createElement("button");
+        revealButton.className = "board-reveal";
+        revealButton.type = "button";
+        revealButton.textContent = revealedBoardAnswers.has(question.id) ? "Ezkutatu" : "Erantzuna";
+        revealButton.setAttribute("aria-expanded",String(revealedBoardAnswers.has(question.id)));
+        revealButton.addEventListener("click",() => {
+          if (revealedBoardAnswers.has(question.id)) revealedBoardAnswers.delete(question.id);
+          else revealedBoardAnswers.add(question.id);
+          renderBoard();
+        });
+
+        item.append(sentence,answer,revealButton);
+        list.append(item);
+      });
+      const allVisible = boardRound.length > 0 && boardRound.every(question => revealedBoardAnswers.has(question.id));
+      $("#all-solutions-button").textContent = allVisible ? "Erantzunak ezkutatu" : "Erantzun guztiak";
+    }
+
+    function toggleAllBoardAnswers() {
+      const allVisible = boardRound.length > 0 && boardRound.every(question => revealedBoardAnswers.has(question.id));
+      if (allVisible) revealedBoardAnswers.clear();
+      else boardRound.forEach(question => revealedBoardAnswers.add(question.id));
+      renderBoard();
+    }
+
+    function finishGame() {
+      clearInterval(timerId);
+      const seconds = elapsedSeconds();
+      const percent = Math.round((score / round.length) * 100);
+      $("#final-score").textContent = `${score}/${round.length}`;
+      $("#final-percent").textContent = `${percent}%`;
+      $("#final-time").textContent = formatTime(seconds);
+      $("#final-streak").textContent = bestStreak;
+      $("#result-message").textContent = percent === 100 ? "Bikain! Dena lehen saiakeran!" : percent >= 80 ? "Oso ondo! Izenak bikain aztertu dituzu." : percent >= 60 ? "Lan ona! Berrikusi zalantzak sortu dizkizuten izenak." : "Jarraitu praktikatzen; urratsez urrats lortuko duzu!";
+      const review = $("#review");
+      const list = $("#review-list");
+      list.replaceChildren();
+      review.hidden = mistakes.length === 0;
+      mistakes.forEach(question => {
+        const item = document.createElement("li");
+        item.className = "review-item";
+        const sentence = document.createElement("span");
+        sentence.className = "review-sentence";
+        sentence.textContent = question.sentence;
+        const analysis = document.createElement("div");
+        analysis.className = "review-analysis";
+        analysis.textContent = question.nouns.map(analysisText).join(" | ");
+        item.append(sentence,analysis);
+        list.append(item);
+      });
+      showScreen($("#results-screen"));
+    }
+
+    document.querySelectorAll("[data-count]").forEach(button => button.addEventListener("click",() => {
+      selectedCount = Number(button.dataset.count);
+      document.querySelectorAll("[data-count]").forEach(item => item.setAttribute("aria-pressed",String(item === button)));
+    }));
+    document.querySelectorAll("[data-open-help]").forEach(button => button.addEventListener("click",() => helpDialog.showModal()));
+    $("#close-help").addEventListener("click",() => helpDialog.close());
+    helpDialog.addEventListener("click",event => {
+      const rect = helpDialog.getBoundingClientRect();
+      if (!(event.clientX >= rect.left && event.clientX <= rect.right && event.clientY >= rect.top && event.clientY <= rect.bottom)) helpDialog.close();
+    });
+    $("#start-button").addEventListener("click",startGame);
+    $("#board-button").addEventListener("click",openBoard);
+    $("#new-board-button").addEventListener("click",openBoard);
+    $("#all-solutions-button").addEventListener("click",toggleAllBoardAnswers);
+    $("#board-menu-button").addEventListener("click",() => showScreen($("#start-screen")));
+    $("#check-nouns-button").addEventListener("click",checkNouns);
+    $("#check-analysis-button").addEventListener("click",checkAnalysis);
+    $("#continue-button").addEventListener("click",continueGame);
+    $("#retry-button").addEventListener("click",startGame);
+    $("#menu-button").addEventListener("click",() => showScreen($("#start-screen")));
+    $("#quit-button").addEventListener("click",() => { clearInterval(timerId); showScreen($("#start-screen")); });
+  </script>
+</body>
+</html>
